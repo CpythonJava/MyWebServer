@@ -32,12 +32,7 @@ Config::Config(){
     // 并发模型选择,默认是proactor
     ActorModel = 0;
 
-
 };
-
-
-
-
 
 void Config::parse_arg(int argc, char*argv[]){
     int opt;
@@ -105,54 +100,3 @@ void Config::parse_arg(int argc, char*argv[]){
         }
     }
 }
-
-
-    
-//     {
-//         switch (opt)
-//         {
-//         case 'p':
-//         {
-//             PORT = atoi(optarg);
-//             break;
-//         }
-//         case 'l':
-//         {
-//             LOGWrite = atoi(optarg);
-//             break;
-//         }
-//         case 'm':
-//         {
-//             TRIGMode = atoi(optarg);
-//             break;
-//         }
-//         case 'o':
-//         {
-//             OPT_LINGER = atoi(optarg);
-//             break;
-//         }
-//         case 's':
-//         {
-//             sql_num = atoi(optarg);
-//             break;
-//         }
-//         case 't':
-//         {
-//             thread_num = atoi(optarg);
-//             break;
-//         }
-//         case 'c':
-//         {
-//             close_log = atoi(optarg);
-//             break;
-//         }
-//         case 'a':
-//         {
-//             actor_model = atoi(optarg);
-//             break;
-//         }
-//         default:
-//             break;
-//         }
-//     }
-// }
