@@ -30,7 +30,7 @@ void connection_pool::init(string url, string User, string PassWord, string DBNa
 	m_User = User;
 	m_PassWord = PassWord;
 	m_DatabaseName = DBName;
-	m_close_log = close_log;
+	m_closelog_flag = close_log;
 
 	for (int i = 0; i < MaxConn; i++)
 	{

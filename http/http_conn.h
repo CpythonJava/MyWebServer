@@ -21,14 +21,9 @@
 #include <sys/uio.h>
 #include <map>
 
-
-// TODO：2.locker
 #include "../lock/locker.h"
-// TODO：3.CGImysql
 #include "../CGImysql/sql_connection_pool.h"
-// TODO：4.timer
 #include "../timer/lst_timer.h"
-// TODO：5.log
 #include "../log/log.h"
 
 class http_conn
@@ -147,7 +142,7 @@ private:
 
     map<string, string> m_users;
     int m_TRIGMode;
-    int m_close_log;
+    int m_closelog_flag;
 
     char sql_user[100];
     char sql_passwd[100];

@@ -1,14 +1,20 @@
 #ifndef WEBSERVER_H
 #define WEBSERVER_H
 
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <stdio.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <cassert>
+
 // getopt函数
 #include <unistd.h>
 // atoi函数
 #include <stdlib.h>
 // epoll函数
 #include <sys/epoll.h>
-#include <string>
-using namespace std;
 
 // TODO：1.http
 #include "./http/http_conn.h"
@@ -22,9 +28,9 @@ const int TIMESLOT = 5;             //最小超时单位
 class WebServer{
 public:
     WebServer();
-    ~WebServer(){};
+    ~WebServer();
 
-    void init(string user, string password, string database,
+    void init(string user, string password, string databaseName,
               int port,             // 端口号
               int logwrite_mode,    // 日志写入方式
               int trig_mode,        // 触发组合模式(listenfd触发模式+connfd触发模式)
@@ -34,6 +40,19 @@ public:
               int closelog_flag,    // 是否关闭日志
               int actormodel       // 并发模型选择
               ); 
+    void thread_pool();
+    void sql_pool();
+    void log_write();
+    void trig_mode();
+    void eventListen();
+    void eventLoop();
+    void timer(int connfd, struct sockaddr_in client_address);
+    void adjust_timer(util_timer *timer);
+    void deal_timer(util_timer *timer, int sockfd);
+    bool dealclinetdata();
+    bool dealwithsignal(bool& timeout, bool& stop_server);
+    void dealwithread(int sockfd);
+    void dealwithwrite(int sockfd);
 
 public:
     // 基础
@@ -58,7 +77,7 @@ public:
     int m_trig_mode;            // 触发组合模式(listenfd触发模式+connfd触发模式)
     int m_opt_linger;           // 优雅关闭链接
     int m_listenfd;
-    int listentrig_mode;        // listenfd触发模式
+    int m_listentrig_mode;      // listenfd触发模式
     int m_conntrig_mode;        // connfd触发模式
     int m_closelog_flag;        // 是否关闭日志
     int m_actormodel;           // 并发模型选择
@@ -72,8 +91,5 @@ public:
     Utils utils;
 
 };
-
-
-
 
 #endif

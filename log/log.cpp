@@ -32,7 +32,7 @@ bool Log::init(const char *file_name, int close_log, int log_buf_size, int split
         pthread_create(&tid, NULL, flush_log_thread, NULL);
     }
     
-    m_close_log = close_log;
+    m_closelog_flag = close_log;
     m_log_buf_size = log_buf_size;
     m_buf = new char[m_log_buf_size];
     memset(m_buf, '\0', m_log_buf_size);

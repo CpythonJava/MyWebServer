@@ -34,8 +34,14 @@ Config::Config(){
 
 
 };
+
+
+
+
+
 void Config::parse_arg(int argc, char*argv[]){
     int opt;
+    const char *str = "p:l:m:o:s:t:c:a:";
     // -p，自定义端口号——默认——9006
     // -l，选择日志写入方式，默认同步写入——0
         // 0，同步写入
@@ -56,38 +62,97 @@ void Config::parse_arg(int argc, char*argv[]){
     // -a，选择反应堆模型，默认Proactor——0
         // 0，Proactor模型
         // 1，Reactor模型
-    const char *str = "p:l:m:o:s:t:c:a:";
+    
     // getopt() 方法是用来分析命令行参数的
     // 该方法由 Unix 标准库提供，包含在 <unistd.h> 头文件中
-    while ((opt = getopt(argc, argv, str)) != 1){
+    while ((opt = getopt(argc, argv, str)) != -1){
         switch (opt)
         {
-        case 'p':
+        case 'p':{
             PORT = atoi(optarg);
             break;
-        case 'l':
+        } 
+        case 'l':{
             LogWrite_mode = atoi(optarg);
             break;
-        case 'm':
+        } 
+        case 'm':{
             Trig_mode = atoi(optarg);
             break;
-        case 'o':
+        } 
+        case 'o':{
             OPT_linger = atoi(optarg);
             break;
-        case 's':
+        } 
+        case 's':{
             SQL_nums = atoi(optarg);
             break;
-        case 't':
+        } 
+        case 't':{
             Thread_nums = atoi(optarg);
             break;
-        case 'c':
+        } 
+        case 'c':{
             CloseLog_flag = atoi(optarg);
             break;
-        case 'a':
+        } 
+        case 'a':{
             ActorModel = atoi(optarg);
             break;
+        } 
         default:
             break;
         }
     }
 }
+
+
+    
+//     {
+//         switch (opt)
+//         {
+//         case 'p':
+//         {
+//             PORT = atoi(optarg);
+//             break;
+//         }
+//         case 'l':
+//         {
+//             LOGWrite = atoi(optarg);
+//             break;
+//         }
+//         case 'm':
+//         {
+//             TRIGMode = atoi(optarg);
+//             break;
+//         }
+//         case 'o':
+//         {
+//             OPT_LINGER = atoi(optarg);
+//             break;
+//         }
+//         case 's':
+//         {
+//             sql_num = atoi(optarg);
+//             break;
+//         }
+//         case 't':
+//         {
+//             thread_num = atoi(optarg);
+//             break;
+//         }
+//         case 'c':
+//         {
+//             close_log = atoi(optarg);
+//             break;
+//         }
+//         case 'a':
+//         {
+//             actor_model = atoi(optarg);
+//             break;
+//         }
+//         default:
+//             break;
+//         }
+//     }
+// }
