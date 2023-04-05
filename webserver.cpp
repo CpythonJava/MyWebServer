@@ -48,7 +48,7 @@ void WebServer::init(string user, string password, string databaseName,
     m_sql_nums = sql_nums;
     m_thread_nums = thread_nums;
     m_closelog_flag = closelog_flag;
-    m_actormodel = actormodel;
+    m_actor_model = actormodel;
 }
 
 void WebServer::trig_mode()
@@ -104,7 +104,7 @@ void WebServer::sql_pool()
 void WebServer::thread_pool()
 {
     //线程池
-    m_pool = new threadpool<http_conn>(m_actormodel, m_connPool, m_thread_nums);
+    m_pool = new threadpool<http_conn>(m_actor_model, m_connPool, m_thread_nums);
 }
 
 void WebServer::eventListen()
@@ -289,7 +289,7 @@ void WebServer::dealwithread(int sockfd)
     util_timer *timer = users_timer[sockfd].timer;
 
     //reactor
-    if (1 == m_actormodel)
+    if (1 == m_actor_model)
     {
         if (timer)
         {
@@ -339,7 +339,7 @@ void WebServer::dealwithwrite(int sockfd)
 {
     util_timer *timer = users_timer[sockfd].timer;
     //reactor
-    if (1 == m_actormodel)
+    if (1 == m_actor_model)
     {
         if (timer)
         {

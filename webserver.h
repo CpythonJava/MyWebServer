@@ -80,7 +80,7 @@ public:
     int m_listentrig_mode;      // listenfd触发模式
     int m_conntrig_mode;        // connfd触发模式
     int m_closelog_flag;        // 是否关闭日志
-    int m_actormodel;           // 并发模型选择
+    int m_actor_model;           // 并发模型选择
 
     int m_pipefd[2];
     int m_epollfd;
