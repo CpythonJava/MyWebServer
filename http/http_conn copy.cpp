@@ -47,41 +47,49 @@ void http_conn::initmysql_result(connection_pool *connPool)
     }
 }
 
-// 对文件描述符设置非阻塞
-int setnonblocking(int fd){
+//对文件描述符设置非阻塞
+int setnonblocking(int fd)
+{
     int old_option = fcntl(fd, F_GETFL);
     int new_option = old_option | O_NONBLOCK;
     fcntl(fd, F_SETFL, new_option);
     return old_option;
 }
 
-// 将内核事件表注册读事件，ET模式，选择开启EPOLLONESHOT
-// 针对客户端连接的描述符,listenfd不开启
-void addfd(int epollfd, int fd, bool one_shot, int TRIGMode){
+//将内核事件表注册读事件，ET模式，选择开启EPOLLONESHOT
+void addfd(int epollfd, int fd, bool one_shot, int TRIGMode)
+{
     epoll_event event;
     event.data.fd = fd;
 
-    if(1 == TRIGMode) event.events = EPOLLIN | EPOLLET | EPOLLRDHUP;
-    else event.events = EPOLLIN | EPOLLRDHUP;
+    if (1 == TRIGMode)
+        event.events = EPOLLIN | EPOLLET | EPOLLRDHUP;
+    else
+        event.events = EPOLLIN | EPOLLRDHUP;
 
-    if(one_shot)  event.events |= EPOLLONESHOT;
+    if (one_shot)
+        event.events |= EPOLLONESHOT;
     epoll_ctl(epollfd, EPOLL_CTL_ADD, fd, &event);
     setnonblocking(fd);
 }
 
-// 从内核时间表删除描述符
-void removefd(int epollfd, int fd){
+//从内核时间表删除描述符
+void removefd(int epollfd, int fd)
+{
     epoll_ctl(epollfd, EPOLL_CTL_DEL, fd, 0);
     close(fd);
 }
 
-// 将事件重置为EPOLLONESHOT
-void modfd(int epollfd, int fd, int ev, int TRIGMode){
+//将事件重置为EPOLLONESHOT
+void modfd(int epollfd, int fd, int ev, int TRIGMode)
+{
     epoll_event event;
     event.data.fd = fd;
 
-    if(1 == TRIGMode) event.events = ev | EPOLLET | EPOLLONESHOT | EPOLLRDHUP;
-    else event.events = ev | EPOLLONESHOT | EPOLLRDHUP;
+    if (1 == TRIGMode)
+        event.events = ev | EPOLLET | EPOLLONESHOT | EPOLLRDHUP;
+    else
+        event.events = ev | EPOLLONESHOT | EPOLLRDHUP;
 
     epoll_ctl(epollfd, EPOLL_CTL_MOD, fd, &event);
 }
@@ -185,35 +193,45 @@ http_conn::LINE_STATUS http_conn::parse_line()
     return LINE_OPEN;
 }
 
-// 循环读取浏览器端发来的客户数据，直到无数据可读或对方关闭连接
-// 非阻塞ET工作模式下，需要一次性将数据读完
+//循环读取客户数据，直到无数据可读或对方关闭连接
+//非阻塞ET工作模式下，需要一次性将数据读完
 bool http_conn::read_once()
 {
-    if(m_read_idx >= READ_BUFFER_SIZE) return false;
-    // 读取字节数
+    if (m_read_idx >= READ_BUFFER_SIZE)
+    {
+        return false;
+    }
     int bytes_read = 0;
 
-    // LT读取数据
-    if(0 == m_TRIGMode){
-        // 从套接字接收数据,存储在m_read_buf缓冲区
+    //LT读取数据
+    if (0 == m_TRIGMode)
+    {
         bytes_read = recv(m_sockfd, m_read_buf + m_read_idx, READ_BUFFER_SIZE - m_read_idx, 0);
-        // 修改m_read_idx读取字节数
         m_read_idx += bytes_read;
-        if(bytes_read <= 0) return false;
+
+        if (bytes_read <= 0)
+        {
+            return false;
+        }
+
         return true;
     }
     //ET读数据
-    else{
-        while(true){
-            // 从套接字接收数据,存储在m_read_buf缓冲区
+    else
+    {
+        while (true)
+        {
             bytes_read = recv(m_sockfd, m_read_buf + m_read_idx, READ_BUFFER_SIZE - m_read_idx, 0);
-            if(bytes_read == -1){
-                // 非阻塞ET模式下,需要一次性读完数据
-                if(errno == EAGAIN || errno == EWOULDBLOCK) break;
+            if (bytes_read == -1)
+            {
+                if (errno == EAGAIN || errno == EWOULDBLOCK)
+                    break;
                 return false;
             }
-            else if(bytes_read == 0) return false;
-            // 修改m_read_idx读取字节数
+            else if (bytes_read == 0)
+            {
+                return false;
+            }
             m_read_idx += bytes_read;
         }
         return true;
