@@ -109,11 +109,11 @@ void WebServer::thread_pool()
 
 void WebServer::eventListen(){
     // 网络编程基础步骤
-    // 
+    // 创建监听socket descriptor
     m_listenfd = socket(PF_INET, SOCK_STREAM, 0);
     assert(m_listenfd >= 0);
 
-    //优雅关闭连接
+    // 优雅关闭连接
     if (0 == m_opt_linger)
     {
         struct linger tmp = {0, 1};
@@ -126,6 +126,7 @@ void WebServer::eventListen(){
     }
 
     int ret = 0;
+    // 创建监听socket的TCP/IP的IPV4 socket地址
     struct sockaddr_in address;
     bzero(&address, sizeof(address));
     address.sin_family = AF_INET;
@@ -133,18 +134,24 @@ void WebServer::eventListen(){
     address.sin_port = htons(m_port);
 
     int flag = 1;
+    // SO_REUSEADDR 允许端口被重复使用
     setsockopt(m_listenfd, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag));
+    // 绑定socket和它的地址
     ret = bind(m_listenfd, (struct sockaddr *)&address, sizeof(address));
     assert(ret >= 0);
+    // 创建监听队列以存放待处理的客户连接，在这些客户连接被accept()之前
     ret = listen(m_listenfd, 5);
     assert(ret >= 0);
 
     utils.init(TIMESLOT);
 
     // epoll创建内核事件表
-    epoll_event events[MAX_EVENT_NUMBER];
+    // 创建一个额外的descriptor来唯一标识内核中的epoll事件表
     m_epollfd = epoll_create(5);
     assert(m_epollfd != -1);
+    // 用于存储epoll事件表中就绪事件的event数组
+    epoll_event events[MAX_EVENT_NUMBER];
+    
 
     // 将listenfd放在epoll树上
     utils.addfd(m_epollfd, m_listenfd, false, m_listentrig_mode);
