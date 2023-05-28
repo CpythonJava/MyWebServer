@@ -47,6 +47,8 @@ void http_conn::initmysql_result(connection_pool *connPool)
     }
 }
 
+// ******epoll事件******
+// ******epoll事件******
 // 对文件描述符设置非阻塞
 int setnonblocking(int fd){
     int old_option = fcntl(fd, F_GETFL);
@@ -86,10 +88,12 @@ void modfd(int epollfd, int fd, int ev, int TRIGMode){
     epoll_ctl(epollfd, EPOLL_CTL_MOD, fd, &event);
 }
 
+
+
 int http_conn::m_user_count = 0;
 int http_conn::m_epollfd = -1;
 
-//关闭连接，关闭一个连接，客户总量减一
+// 关闭连接，关闭一个连接，客户总量减一
 void http_conn::close_conn(bool real_close)
 {
     if (real_close && (m_sockfd != -1))
@@ -101,7 +105,7 @@ void http_conn::close_conn(bool real_close)
     }
 }
 
-//初始化连接,外部调用初始化套接字地址
+// 初始化连接,外部调用初始化套接字地址
 void http_conn::init(int sockfd, const sockaddr_in &addr, char *root, int TRIGMode,
                      int close_log, string user, string passwd, string sqlname)
 {
@@ -123,8 +127,8 @@ void http_conn::init(int sockfd, const sockaddr_in &addr, char *root, int TRIGMo
     init();
 }
 
-//初始化新接受的连接
-//check_state默认为分析请求行状态
+// 初始化新接受的连接
+// check_state默认为分析请求行状态
 void http_conn::init()
 {
     mysql = NULL;
@@ -151,8 +155,8 @@ void http_conn::init()
     memset(m_real_file, '\0', FILENAME_LEN);
 }
 
-//从状态机，用于分析出一行内容
-//返回值为行的读取状态，有LINE_OK,LINE_BAD,LINE_OPEN
+// 从状态机，用于分析出一行内容
+// 返回值为行的读取状态，有LINE_OK,LINE_BAD,LINE_OPEN
 http_conn::LINE_STATUS http_conn::parse_line()
 {
     char temp;
@@ -187,8 +191,7 @@ http_conn::LINE_STATUS http_conn::parse_line()
 
 // 循环读取浏览器端发来的客户数据，直到无数据可读或对方关闭连接
 // 非阻塞ET工作模式下，需要一次性将数据读完
-bool http_conn::read_once()
-{
+bool http_conn::read_once(){
     if(m_read_idx >= READ_BUFFER_SIZE) return false;
     // 读取字节数
     int bytes_read = 0;
@@ -667,18 +670,23 @@ bool http_conn::process_write(HTTP_CODE ret)
     bytes_to_send = m_write_idx;
     return true;
 }
-void http_conn::process()
-{
+
+// 各子线程通过process函数对任务进行处理
+void http_conn::process(){
+    // 报文解析
     HTTP_CODE read_ret = process_read();
-    if (read_ret == NO_REQUEST)
-    {
+    // NO_REQUEST，表示请求不完整，需要继续接收请求数据
+    if(read_ret == NO_REQUEST){
+        // 注册并监听读事件
         modfd(m_epollfd, m_sockfd, EPOLLIN, m_TRIGMode);
         return;
     }
+    // 报文响应
     bool write_ret = process_write(read_ret);
-    if (!write_ret)
-    {
+    if(!write_ret){
+        // 关闭连接
         close_conn();
     }
+    // 注册并监听写事件
     modfd(m_epollfd, m_sockfd, EPOLLOUT, m_TRIGMode);
 }

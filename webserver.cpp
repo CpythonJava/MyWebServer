@@ -108,7 +108,8 @@ void WebServer::thread_pool()
 }
 
 void WebServer::eventListen(){
-    //网络编程基础步骤
+    // 网络编程基础步骤
+    // 
     m_listenfd = socket(PF_INET, SOCK_STREAM, 0);
     assert(m_listenfd >= 0);
 
@@ -242,6 +243,7 @@ bool WebServer::dealclinetdata(){
     }
     return true;
 }
+
 // 处理信号
 bool WebServer::dealwithsignal(bool &timeout, bool &stop_server){
     int ret = 0;
@@ -266,6 +268,7 @@ bool WebServer::dealwithsignal(bool &timeout, bool &stop_server){
     }
     return true;
 }
+
 // 处理客户连接上接收到的数据
 void WebServer::dealwithread(int sockfd){
     util_timer *timer = users_timer[sockfd].timer;
@@ -302,6 +305,7 @@ void WebServer::dealwithread(int sockfd){
         else deal_timer(timer, sockfd);
     }
 }
+
 // 写入数据
 void WebServer::dealwithwrite(int sockfd){
     util_timer *timer = users_timer[sockfd].timer;
@@ -330,6 +334,7 @@ void WebServer::dealwithwrite(int sockfd){
 
     }
 }
+
 // 服务器接收http请求
 void WebServer::eventLoop(){
     bool timeout = false;
@@ -367,6 +372,7 @@ void WebServer::eventLoop(){
             else if(events[i].events & EPOLLIN){
                 dealwithread(sockfd);
             }
+            // 写入数据
             else if(events[i].events & EPOLLOUT){
                 dealwithwrite(sockfd);
             }

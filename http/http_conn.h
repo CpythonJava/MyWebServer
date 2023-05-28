@@ -88,7 +88,11 @@ private:
     // 生成响应报文
     HTTP_CODE do_request();
     // 将指针向后偏移，指向未处理的字符
-    char *get_line() {return m_read_buf + m_start_line;};
+    // m_start_line是行在buffer中的起始位置，将该位置后面的数据赋给text
+    // 此时从状态机已经提前将
+    char *get_line(){
+        return m_read_buf + m_start_line;
+    };
     // 从状态机读取一行,分析是请求报文的哪一个部分
     LINE_STATUS parse_line();
 
