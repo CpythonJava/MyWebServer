@@ -150,7 +150,7 @@ void Utils::init(int timeslot)
     m_TIMESLOT = timeslot;
 }
 
-//对文件描述符设置非阻塞
+// 对文件描述符设置非阻塞
 int Utils::setnonblocking(int fd)
 {
     int old_option = fcntl(fd, F_GETFL);
@@ -159,7 +159,7 @@ int Utils::setnonblocking(int fd)
     return old_option;
 }
 
-//将内核事件表注册读事件，ET模式，选择开启EPOLLONESHOT
+// 将内核事件表注册读事件，ET模式，选择开启EPOLLONESHOT
 void Utils::addfd(int epollfd, int fd, bool one_shot, int TRIGMode)
 {
     epoll_event event;
@@ -176,7 +176,7 @@ void Utils::addfd(int epollfd, int fd, bool one_shot, int TRIGMode)
     setnonblocking(fd);
 }
 
-//信号处理函数
+// 信号处理函数
 void Utils::sig_handler(int sig)
 {
     //为保证函数的可重入性，保留原来的errno
@@ -186,7 +186,7 @@ void Utils::sig_handler(int sig)
     errno = save_errno;
 }
 
-//设置信号函数
+// 设置信号函数
 void Utils::addsig(int sig, void(handler)(int), bool restart)
 {
     struct sigaction sa;

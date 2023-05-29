@@ -103,7 +103,7 @@ void WebServer::sql_pool()
 
 void WebServer::thread_pool()
 {
-    //线程池
+    // 线程池
     m_pool = new threadpool<http_conn>(m_actor_model, m_connPool, m_thread_nums);
 }
 
@@ -151,9 +151,9 @@ void WebServer::eventListen(){
     assert(m_epollfd != -1);
     // 用于存储epoll事件表中就绪事件的event数组
     epoll_event events[MAX_EVENT_NUMBER];
-    
 
-    // 将listenfd放在epoll树上
+    // 主线程往epoll内核事件表中注册listenfd
+    // 当监听到新的客户连接时，listenfd变为就绪事件
     utils.addfd(m_epollfd, m_listenfd, false, m_listentrig_mode);
     // 将上述epollfd赋值给http类对象的m_epollfd属性
     http_conn::m_epollfd = m_epollfd;
@@ -300,10 +300,12 @@ void WebServer::dealwithread(int sockfd){
     }
     else{
         // proactor
+        // 主线程从这一sockfd循环读取数据, 直到没有更多数据可读 
         if (users[sockfd].read_once()) {
             LOG_INFO("deal with the client(%s)", inet_ntoa(users[sockfd].get_address()->sin_addr));
 
             // 若监测到读事件，将该事件放入请求队列
+            // 将读取到的数据封装成一个请求对象并插入请求队列 
             m_pool->append_p(users + sockfd);
 
             if(timer) adjust_timer(timer);
@@ -332,7 +334,8 @@ void WebServer::dealwithwrite(int sockfd){
         }
     }
     else{
-        //proactor
+        // proactor
+        // 主线程往socket上写入服务器处理客户请求的结果 
         if (users[sockfd].write()){
             LOG_INFO("send data to the client(%s)", inet_ntoa(users[sockfd].get_address()->sin_addr));
             if (timer) adjust_timer(timer);
@@ -349,6 +352,8 @@ void WebServer::eventLoop(){
 
     while(!stop_server){
         // 等待所监控文件描述符上有事件发生
+        // 主线程调用epoll_wait等待m_epollfd上的事件，
+        // 并将当前所有就绪的epoll_event复制到events数组中 
         int number = epoll_wait(m_epollfd, events, MAX_EVENT_NUMBER, -1);
         if(number < 0 && errno != EINTR){
             LOG_ERROR("%s", "epoll failure");
@@ -356,9 +361,11 @@ void WebServer::eventLoop(){
         }
         // 对所有就绪事件进行处理
         for(int i = 0; i < number; i++){
+            // 事件表中就绪的socket descriptor
             int sockfd = events[i].data.fd;
 
             // 处理新到的客户连接
+            // 当监听到新的用户连接，listenfd上则产生就绪事件
             if(sockfd == m_listenfd){
                 bool flag = dealclinetdata();
                 if (false == flag)
@@ -366,7 +373,7 @@ void WebServer::eventLoop(){
             }
             // 处理异常事件
             else if(events[i].events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR)){
-                // 服务器端关闭连接，移除对应的定时器
+                // 如有异常，服务器端关闭连接，移除对应的定时器
                 util_timer *timer = users_timer[sockfd].timer;
                 deal_timer(timer, sockfd);
             }
@@ -377,6 +384,7 @@ void WebServer::eventLoop(){
             }
             // 处理客户连接上接收到的数据
             else if(events[i].events & EPOLLIN){
+                // 当这一sockfd上有可读事件时，epoll_wait通知主线程
                 dealwithread(sockfd);
             }
             // 写入数据

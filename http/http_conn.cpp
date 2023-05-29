@@ -205,7 +205,7 @@ bool http_conn::read_once(){
         if(bytes_read <= 0) return false;
         return true;
     }
-    //ET读数据
+    // ET读数据
     else{
         while(true){
             // 从套接字接收数据,存储在m_read_buf缓冲区
@@ -673,7 +673,7 @@ bool http_conn::process_write(HTTP_CODE ret)
 
 // 各子线程通过process函数对任务进行处理
 void http_conn::process(){
-    // 报文解析
+    // 对读入connfd读缓冲区的请求报文解析
     HTTP_CODE read_ret = process_read();
     // NO_REQUEST，表示请求不完整，需要继续接收请求数据
     if(read_ret == NO_REQUEST){
