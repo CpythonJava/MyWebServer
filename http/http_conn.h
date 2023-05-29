@@ -87,9 +87,11 @@ private:
     HTTP_CODE parse_content(char *text);
     // 生成响应报文
     HTTP_CODE do_request();
+    
     // 将指针向后偏移，指向未处理的字符
     // m_start_line是行在buffer中的起始位置，将该位置后面的数据赋给text
-    // 此时从状态机已经提前将
+    // 此时从状态机已提前将一行的末尾字符\r\n变为\0\0
+    // 所以text可以直接取出完整的行进行解析
     char *get_line(){
         return m_read_buf + m_start_line;
     };
