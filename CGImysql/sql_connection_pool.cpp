@@ -15,16 +15,18 @@ connection_pool::connection_pool()
 	m_CurConn = 0;
 	m_FreeConn = 0;
 }
-
+// 使用局部静态变量懒汉模式创建连接池
 connection_pool *connection_pool::GetInstance()
 {
+	// 局部静态变量单例模式
 	static connection_pool connPool;
 	return &connPool;
 }
 
-//构造初始化
+// 构造初始化
 void connection_pool::init(string url, string User, string PassWord, string DBName, int Port, int MaxConn, int close_log)
 {
+	// 初始化数据库信息
 	m_url = url;
 	m_Port = Port;
 	m_User = User;
@@ -32,6 +34,7 @@ void connection_pool::init(string url, string User, string PassWord, string DBNa
 	m_DatabaseName = DBName;
 	m_closelog_flag = close_log;
 
+	// 创建MaxConn条数据库连接
 	for (int i = 0; i < MaxConn; i++)
 	{
 		MYSQL *con = NULL;
@@ -49,17 +52,20 @@ void connection_pool::init(string url, string User, string PassWord, string DBNa
 			LOG_ERROR("MySQL Error");
 			exit(1);
 		}
+		// 更新连接池和空闲连接数量
 		connList.push_back(con);
 		++m_FreeConn;
 	}
-
+	
+	// 使用信号量实现多线程争夺连接的同步机制
+	// 将信号量初始化为最大连接次数
 	reserve = sem(m_FreeConn);
 
 	m_MaxConn = m_FreeConn;
 }
 
 
-//当有请求时，从数据库连接池中返回一个可用连接，更新使用和空闲连接数
+// 当有请求时，从数据库连接池中返回一个可用连接，更新使用和空闲连接数
 MYSQL *connection_pool::GetConnection()
 {
 	MYSQL *con = NULL;
@@ -67,8 +73,9 @@ MYSQL *connection_pool::GetConnection()
 	if (0 == connList.size())
 		return NULL;
 
+ 	// 取出连接，信号量减1，为0则阻塞等待
 	reserve.wait();
-	
+	// 互斥锁加锁
 	lock.lock();
 
 	con = connList.front();
@@ -76,61 +83,66 @@ MYSQL *connection_pool::GetConnection()
 
 	--m_FreeConn;
 	++m_CurConn;
-
+	// 互斥锁解锁
 	lock.unlock();
 	return con;
 }
 
-//释放当前使用的连接
+// 释放当前使用的连接
 bool connection_pool::ReleaseConnection(MYSQL *con)
 {
 	if (NULL == con)
 		return false;
-
+	// 互斥锁加锁
 	lock.lock();
 
 	connList.push_back(con);
 	++m_FreeConn;
 	--m_CurConn;
-
+	// 互斥锁解锁
 	lock.unlock();
-
+	// 释放连接,信号量加1
 	reserve.post();
 	return true;
 }
 
-//销毁数据库连接池
+// 销毁数据库连接池
 void connection_pool::DestroyPool()
 {
 
 	lock.lock();
 	if (connList.size() > 0)
-	{
+	{	
+		// 通过迭代器遍历，关闭数据库连接
 		list<MYSQL *>::iterator it;
 		for (it = connList.begin(); it != connList.end(); ++it)
 		{
 			MYSQL *con = *it;
 			mysql_close(con);
 		}
+		// 重置空闲连接和现有连接数量
 		m_CurConn = 0;
 		m_FreeConn = 0;
+		// 清空list
 		connList.clear();
 	}
 
 	lock.unlock();
 }
 
-//当前空闲的连接数
+// 当前空闲的连接数
 int connection_pool::GetFreeConn()
 {
 	return this->m_FreeConn;
 }
 
+// RAII机制销毁连接池
 connection_pool::~connection_pool()
 {
 	DestroyPool();
 }
 
+// 不直接调用获取和释放连接的接口，将其封装起来，通过RAII机制进行获取和释放
 connectionRAII::connectionRAII(MYSQL **SQL, connection_pool *connPool){
 	*SQL = connPool->GetConnection();
 	

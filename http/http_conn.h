@@ -87,7 +87,7 @@ private:
     HTTP_CODE parse_content(char *text);
     // 生成响应报文
     HTTP_CODE do_request();
-    
+
     // 将指针向后偏移，指向未处理的字符
     // m_start_line是行在buffer中的起始位置，将该位置后面的数据赋给text
     // 此时从状态机已提前将一行的末尾字符\r\n变为\0\0
@@ -157,6 +157,7 @@ private:
     int bytes_to_send;
     // 已发送字节数
     int bytes_have_send;
+    // 网站根目录
     char *doc_root;
 
     map<string, string> m_users;
